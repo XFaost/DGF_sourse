@@ -1,8 +1,8 @@
 import { disableScroll } from '../functions/disable-scroll';
 import { enableScroll } from '../functions/enable-scroll';
 
-let creditorsData = null;
-let selectedCreditor = null;
+let registersData = null;
+let selectedRegister = null;
 let overlay = document.querySelector('[data-overlay]');
 let breakpointTablet = 768;
 let identModal = document.querySelector('[data-ident-modal]');
@@ -32,19 +32,19 @@ const clearFields = () => {
 }
 
 
-const getCreditorById = (id) => {
-    for(var creditor of creditorsData['results']) {
-        if (creditor['id'] == id) {
-            return creditor;
+const getRegisterById = (id) => {
+    for(var register of registersData['results']) {
+        if (register['id'] == id) {
+            return register;
         }        
     }
     return null;
 }
 
-const showModal = function(overlayBg, button, modalBlock, creditorId) {
-    selectedCreditor = getCreditorById(creditorId);
-    if (selectedCreditor) {
-        modalBlock.querySelector('.modal__title').innerHTML = `Пошук боржника у реєстрі ${selectedCreditor['name']}`;
+const showModal = function(overlayBg, button, modalBlock, registerId) {
+    selectedRegister = getRegisterById(registerId);
+    if (selectedRegister) {
+        modalBlock.querySelector('.modal__title').innerHTML = `Пошук боржника у реєстрі ${selectedRegister['name']}`;
     }    
     overlayBg.classList.add('active');
     modalBlock.classList.add('active');
@@ -53,19 +53,19 @@ const showModal = function(overlayBg, button, modalBlock, creditorId) {
     clearDebtorsTable();
 }
 
-const showMobileModal = function(overlayBg, button, modalBlock, creditorId) {
-    selectedCreditor = getCreditorById(creditorId);
-    modalBlock.querySelector('.modal__title').innerHTML = `Картка ${selectedCreditor['name']}`;
-    modalBlock.querySelector('.ident-mobile__image source').srcset = `${selectedCreditor['trademark']['normal_webp']}`;
-    modalBlock.querySelector('.ident-mobile__image img').src = `${selectedCreditor['trademark']['normal']}`;
-    modalBlock.querySelector('.ident-mobile__name').innerHTML = `ЄДРПОУ: ${selectedCreditor['edrpou']}`;
+const showMobileModal = function(overlayBg, button, modalBlock, registerId) {
+    selectedRegister = getRegisterById(registerId);
+    modalBlock.querySelector('.modal__title').innerHTML = `Картка ${selectedRegister['trademark']['name']}`;
+    modalBlock.querySelector('.ident-mobile__image source').srcset = `${selectedRegister['trademark']['logo']['normal_webp']}`;
+    modalBlock.querySelector('.ident-mobile__image img').src = `${selectedRegister['trademark']['logo']['normal']}`;
+    modalBlock.querySelector('.ident-mobile__name').innerHTML = `ЄДРПОУ: ${selectedRegister['creditor']['edrpou']}`;
     modalBlock.querySelector('.ident-mobile__list').innerHTML = `
         <li class="ident-mobile__item">
             <span class="ident-mobile__title">
                 Борг відступлено за договором:
             </span>
             <span class="ident-mobile__value">
-                ${selectedCreditor['contract_number']}
+                ${selectedRegister['contract']['number']}
             </span>
         </li>
         <li class="ident-mobile__item">
@@ -73,7 +73,7 @@ const showMobileModal = function(overlayBg, button, modalBlock, creditorId) {
                 Договір заключено:
             </span>
             <span class="ident-mobile__value">
-                ${selectedCreditor['contract_date']}
+                ${selectedRegister['contract']['date']}
             </span>
         </li>
         <li class="ident-mobile__item">
@@ -81,21 +81,21 @@ const showMobileModal = function(overlayBg, button, modalBlock, creditorId) {
                 Дата передачі реєстру:
             </span>
             <span class="ident-mobile__value">
-                ${selectedCreditor['transfer_date']}
+                ${selectedRegister['date']}
             </span>
         </li>
     `;
     modalBlock.querySelector('.ident-mobile__btns').innerHTML = `
-        <button class="ident-mobile__btn blue-btn" data-ident data-creditor-id="${selectedCreditor['id']}">
+        <button class="ident-mobile__btn blue-btn" data-ident data-register-id="${selectedRegister['id']}">
             Шукати у реєстрі боржників
         </button>
-        <a href="${selectedCreditor['contract_file']}" target="_blank" download class="ident-mobile__btn blue-btn-transparent">
+        <a href="${selectedRegister['contract']['file']}" target="_blank" download class="ident-mobile__btn blue-btn-transparent">
             <svg width='18' height='18'>
                 <use href="${static_files['sprite']}#type"></use>
             </svg>
             Скачати договір
         </a>
-        <a href="${selectedCreditor['url']}" target="_blank" class="ident-mobile__btn blue-btn-transparent">
+        <a href="${selectedRegister['trademark']['url']}" target="_blank" class="ident-mobile__btn blue-btn-transparent">
             Перейти до сторінки кредитора
         </a>
     `;
@@ -126,7 +126,7 @@ const mobileCheck = function(buttons) {
     if (containerWidth < breakpointTablet) {
         buttons.map(function(btn) {
             btn.addEventListener('click', function(e) {
-                showMobileModal(overlay, btn, identMobileModal, btn.dataset.creditorId);
+                showMobileModal(overlay, btn, identMobileModal, btn.dataset.registerId);
             })
         });
     }
@@ -135,7 +135,7 @@ const mobileCheck = function(buttons) {
 const plunkModalBtns = function(btns, overlayBg, modalBlock){
     btns.map(function(btn){
         btn.addEventListener('click', function(e) {
-            showModal(overlayBg, btn, modalBlock, btn.dataset.creditorId);
+            showModal(overlayBg, btn, modalBlock, btn.dataset.registerId);
         })
     });
 }
@@ -169,21 +169,21 @@ const updateModalsEvents = () => {
     }
 }
 
-let creditorsSearchField = document.querySelector('[data-creditors-search-field]');
-let creditorsStartSearch = document.querySelector('[data-creditors-start-search]');
-let creditorsClear = document.querySelector('[data-creditors-clear]');
-let creditorsResult = document.querySelector('[data-creditors-result]');
+let registersSearchField = document.querySelector('[data-registers-search-field]');
+let registersStartSearch = document.querySelector('[data-registers-start-search]');
+let registersClear = document.querySelector('[data-registers-clear]');
+let registersResult = document.querySelector('[data-registers-result]');
 
-const clearCreditorsTable = () => {
-    const rows = creditorsResult.getElementsByClassName('ident-list__row');
+const clearRegistersTable = () => {
+    const rows = registersResult.getElementsByClassName('ident-list__row');
     while(rows.length > 1){
         rows[1].parentNode.removeChild(rows[1]);
     }
 }
 
-const setCreditorsTable = () => {
-    if(creditorsData['results'].length == 0) {
-        creditorsResult.innerHTML += `
+const setRegistersTable = () => {
+    if(registersData['results'].length == 0) {
+        registersResult.innerHTML += `
             <li class="ident-list__row" style="grid-template-columns: 1fr">
                 <div class="ident-list__coll">
                     По запиту нічого не знайдено
@@ -192,44 +192,44 @@ const setCreditorsTable = () => {
         `;
     }
     else {
-        for(var creditor of creditorsData['results']) {
-            creditorsResult.innerHTML += `
+        for(var register of registersData['results']) {
+            registersResult.innerHTML += `
                 <li class="ident-list__row">
                     <a href="#" class="ident-list__coll">
                         <picture>
-                            <source type='image/webp' srcset='${creditor['trademark']['normal_webp']}'>
-                            <img width='200' height='50' src='${creditor['trademark']['normal']}' alt='logo'>
+                            <source type='image/webp' srcset='${register['trademark']['logo']['normal_webp']}'>
+                            <img width='200' height='50' src='${register['trademark']['logo']['normal']}' alt='logo'>
                         </picture>
                     </a>
-                    <button data-mobile-ident data-creditor-id="${creditor['id']}">Open mobile modal</button>
+                    <button data-mobile-ident data-register-id="${register['id']}">Open mobile modal</button>
                     <span class="ident-list__coll">
-                        <span class="ident-list__coll-name">${creditor['name']}</span>
-                        <span class="ident-list__coll-value">(ЄДРПОУ: ${creditor['edrpou']})</span>
+                        <span class="ident-list__coll-name">${register['trademark']['name']}</span>
+                        <span class="ident-list__coll-value">(ЄДРПОУ: ${register['creditor']['edrpou']})</span>
                     </span>
         
                     <span class="ident-list__coll">
-                        ${creditor['contract_number']}
+                        ${register['contract']['number']}
                     </span>
         
                     <span class="ident-list__coll">
-                        ${creditor['contract_date']}
+                        ${register['contract']['date']}
                     </span>
         
                     <span class="ident-list__coll">
-                        ${creditor['transfer_date']}
+                        ${register['date']}
                     </span>
                     <div class="ident-list__hide">
                         <div class="ident-list__wrapper">
-                            <button class="ident-list__hide-btn" data-ident data-creditor-id="${creditor['id']}">
+                            <button class="ident-list__hide-btn" data-ident data-register-id="${register['id']}">
                                 Шукати у реєстрі боржників
                             </button>
-                            <a href="${creditor['contract_file']}" target="_blank" download class="ident-list__hide-btn">
+                            <a href="${register['contract']['file']}" target="_blank" download class="ident-list__hide-btn">
                                 <svg width='18' height='18'>
                                     <use href='${static_files['sprite']}#type'></use>
                                 </svg>
                                 Скачати договір
                             </a>
-                            <a href="${creditor['url']}" target="_blank" class="ident-list__hide-btn">
+                            <a href="${register['trademark']['url']}" target="_blank" class="ident-list__hide-btn">
                                 Перейти до сторінки кредитора
                             </a>
                         </div>
@@ -242,40 +242,40 @@ const setCreditorsTable = () => {
     updateModalsEvents();
 }
 
-const creditorsGetAsync = (callback, searchValue) => {
+const registersGetAsync = (callback, searchValue) => {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() { 
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-            creditorsData = JSON.parse(xmlHttp.responseText);
+            registersData = JSON.parse(xmlHttp.responseText);
             callback();
         }
     }
-    xmlHttp.open("GET", `/api/v1/creditors/?v=${searchValue}`, true); 
+    xmlHttp.open("GET", `/api/v1/registers/?v=${searchValue}`, true); 
     xmlHttp.send(null);
 }
 
 
 
-if(creditorsSearchField) {
-    creditorsStartSearch.addEventListener('click', function(e){
-        clearCreditorsTable();
-        creditorsGetAsync(setCreditorsTable, creditorsSearchField.value);
+if(registersSearchField) {
+    registersStartSearch.addEventListener('click', function(e){
+        clearRegistersTable();
+        registersGetAsync(setRegistersTable, registersSearchField.value);
     });
     
-    creditorsSearchField.addEventListener('keypress', (event) => {
+    registersSearchField.addEventListener('keypress', (event) => {
         if (event.key === "Enter") {
             event.preventDefault();
-            creditorsStartSearch.click();
+            registersStartSearch.click();
         }
     });
     
-    creditorsClear.addEventListener('click', function(e){
-        clearCreditorsTable();
-        creditorsSearchField.value = '';
-        creditorsGetAsync(setCreditorsTable, creditorsSearchField.value);
+    registersClear.addEventListener('click', function(e){
+        clearRegistersTable();
+        registersSearchField.value = '';
+        registersGetAsync(setRegistersTable, registersSearchField.value);
     })
 
-    creditorsGetAsync(setCreditorsTable, creditorsSearchField.value);
+    registersGetAsync(setRegistersTable, registersSearchField.value);
 }
 
 
@@ -417,7 +417,7 @@ const debtorsGetAsync = (callback, vatin, caNumber) => {
             callback(JSON.parse(xmlHttp.responseText));
         }
     }
-    xmlHttp.open("GET", `/api/v1/debtors/?creditor=${selectedCreditor['id']}&vatin=${vatin}&ca_number=${caNumber}`, true); 
+    xmlHttp.open("GET", `/api/v1/debtors/?register=${selectedRegister['id']}&vatin=${vatin}&ca_number=${caNumber}`, true); 
     xmlHttp.send(null);
 }
 
