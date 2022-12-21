@@ -101,6 +101,12 @@ header.active {
     grid-gap: 30px;
     max-height: -webkit-fill-available;
   }
+  
+  .header__btns {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
 
   .header__nav,
   .site-nav__item {

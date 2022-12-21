@@ -41,33 +41,17 @@ const rename = require("gulp-rename");
 const srcFolder = './source';
 const buildFolder = './build';
 const paths = {
-  srcSvg: `${srcFolder}/img/sprite/*.svg`,
-  srcImgFolder: `${srcFolder}/img`,
-  buildImgFolder: `${buildFolder}/img`,
-  buildSpriteFolder: `${buildFolder}/img/sprite`,
   srcScss: `${srcFolder}/scss/**/*.scss`,
   buildCssFolder: `${buildFolder}/css`,
   srcFullJs: `${srcFolder}/js/**/*.js`,
   srcMainJs: `${srcFolder}/js/main.js`,
   buildJsFolder: `${buildFolder}/js`,
-  srcPartialsFolder: `${srcFolder}/partials`,
-  resourcesFolder: `${srcFolder}/resources`,
 };
 
 let isProd = false; // dev by default
 
 const clean = () => {
   return del([buildFolder])
-}
-
-//svg sprite
-const svgSprites = () => {
-  return src(paths.srcSvg)
-    .pipe(svgstore({
-      inlineSvg: true
-    }))
-    .pipe(rename("sprite.svg"))
-    .pipe(dest(paths.buildSpriteFolder));
 }
 
 // scss styles
@@ -186,50 +170,11 @@ const resources = () => {
     .pipe(dest(buildFolder))
 }
 
-const images = () => {
-  return src([`${paths.srcImgFolder}/**/**.{jpg,jpeg,png,svg,gif}`])
-    .pipe(gulpif(isProd, image([
-      image.mozjpeg({
-        quality: 80,
-        progressive: true
-      }),
-      image.optipng({
-        optimizationLevel: 2
-      }),
-    ])))
-    .pipe(dest(paths.buildImgFolder))
-};
-
-
-const video = () => {
-  return src([`${paths.srcImgFolder}/**/**.{mp4,webm}`])
-    .pipe(dest(paths.buildImgFolder));
-};
-
-const webpImages = () => {
-  return src([`${paths.srcImgFolder}/**/**.{jpg,jpeg,png}`])
-    .pipe(webp())
-    .pipe(dest(paths.buildImgFolder))
-};
-
 // const avifImages = () => {
 //   return src([`${paths.srcImgFolder}/**/**.{jpg,jpeg,png}`])
 //     .pipe(avif())
 //     .pipe(dest(paths.buildImgFolder))
 // };
-
-const htmlInclude = () => {
-  return src([`${srcFolder}/*.html`])
-    .pipe(fileInclude({
-      prefix: '@',
-      basepath: '@file'
-    }))
-    .pipe(typograf({
-      locale: ['ru', 'en-US']
-    }))
-    .pipe(dest(buildFolder))
-    .pipe(browserSync.stream());
-}
 
 const watchFiles = () => {
   browserSync.init({
@@ -275,14 +220,6 @@ const rewrite = () => {
     .pipe(dest(buildFolder));
 }
 
-const htmlMinify = () => {
-  return src(`${buildFolder}/**/*.html`)
-    .pipe(htmlmin({
-      collapseWhitespace: true
-    }))
-    .pipe(dest(buildFolder));
-}
-
 const zipFiles = (done) => {
   del.sync([`${buildFolder}/*.zip`]);
   return src(`${buildFolder}/**/*.*`, {})
@@ -301,11 +238,11 @@ const toProd = (done) => {
   done();
 };
 
-exports.default = series(clean, htmlInclude, scripts, styles, resources, images,  webpImages, video, svgSprites, watchFiles);
+exports.default = series(clean, scripts, styles, resources, watchFiles);
 
-exports.backend = series(clean, htmlInclude, scriptsBackend, stylesBackend, resources, video,images, webpImages, svgSprites)
+exports.backend = series(clean, scriptsBackend, stylesBackend, resources)
 
-exports.build = series(toProd, clean, htmlInclude, scripts, styles, resources, video,images, webpImages, svgSprites, htmlMinify);
+exports.build = series(toProd, clean, scripts, styles, resources);
 
 exports.cache = series(cache, rewrite);
 

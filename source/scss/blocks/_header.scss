@@ -17,6 +17,10 @@ header {
     justify-content: space-between;
   }
 
+  &__btns {
+    display: flex;
+    flex-direction: row;
+  }
   &__btn {
     width: clamp(180px, 17.063vw, 273px);
   }
